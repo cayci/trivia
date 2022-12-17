@@ -46,9 +46,18 @@ class TriviaTestCase(unittest.TestCase):
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
-        self.assertTrue(data['totalQuestions'])
+        self.assertTrue(data['total_questions'])
         self.assertEqual(len(data['questions']), 10)
         self.assertTrue(len(data['categories']))
+        
+    def test_get_questions_per_category(self):
+        res = self.client().get('/categories/5/questions')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(data['total_questions'])
+        self.assertEqual(len(data['questions']),3)
+        self.assertEqual(data['current_category'],'Entertainment')
     """
     def test_404_requesting_beyond_valid_page(self):
         res = self.client().get('/questions?page=100')

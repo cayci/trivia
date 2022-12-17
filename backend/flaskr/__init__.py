@@ -83,8 +83,9 @@ def create_app(test_config=None):
         json_formatted_questions = [question.format() for question in questions]
         return jsonify({
             'questions': json_formatted_questions[start:end],
-            'totalQuestions': len(questions),
-            'categories': retrieve_category_dictionary()
+            'total_questions': len(questions),
+            'categories': retrieve_category_dictionary(),
+            'current_category': "Science"
         })
           
        
@@ -154,12 +155,25 @@ def create_app(test_config=None):
     """
     @TODO:
     Create a GET endpoint to get questions based on category.
-
     TEST: In the "List" tab / main screen, clicking on one of the
     categories in the left column will cause only questions of that
     category to be shown.
     """
-
+    @app.route('/categories/<int:category_id>/questions')
+    def get_questions_for_selected_category(category_id):
+        questions = Question.query.filter_by(category=category_id).order_by(Question.id).all()
+        
+        if len(questions) == 0:
+            abort(404)
+        
+        json_formatted_questions = [question.format() for question in questions]
+        return jsonify({
+            'questions': json_formatted_questions,
+            'total_questions': len(questions),
+            'current_category': retrieve_category_dictionary()[category_id]
+        })
+    
+    
     """
     @TODO:
     Create a POST endpoint to get questions to play the quiz.
