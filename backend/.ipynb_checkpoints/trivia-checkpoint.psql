@@ -134,7 +134,7 @@ COPY public.questions (id, question, answer, difficulty, category) FROM stdin;
 13	What is the largest lake in Africa?	Lake Victoria	2	3
 14	In which royal palace would you find the Hall of Mirrors?	The Palace of Versailles	3	3
 15	The Taj Mahal is located in which Indian city?	Agra	2	3
-16	Which Dutch graphic artist–initials M C was a creator of optical illusions?	Escher	1	2
+16	Which Dutch graphic artist-initials M C was a creator of optical illusions?	Escher	1	2
 17	La Giaconda is better known as what?	Mona Lisa	3	2
 18	How many paintings did Van Gogh sell in his lifetime?	One	4	2
 19	Which American artist was a pioneer of Abstract Expressionism, and a leading exponent of action painting?	Jackson Pollock	2	2

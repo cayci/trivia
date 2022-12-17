@@ -45,16 +45,17 @@ def create_app(test_config=None):
     @app.route('/categories', methods=['GET'])
     def get_all_categories():
         body=request.get_json()
-        selection = Category.query.order_by(Category.id).all()
+        categories = Category.query.order_by(Category.id).all()
 
-        if len(selection) == 0:
+        cat_dict = {}
+        for cat in categories:
+            cat_dict[cat.id] = cat.type
+        
+        if len(categories) == 0:
             abort(404)
 
-        json_formatted_categories = [category.format() for category in selection]
         return jsonify({
-            'success': True,
-            'categories': json_formatted_categories,
-            'total_categories': len(selection)
+            'categories': cat_dict
         })
 
     """
@@ -70,7 +71,7 @@ def create_app(test_config=None):
         body=request.get_json()
         selection = Question.query.order_by(Question.id).all()
         data=[]                                    
-        for q in questions:
+        for q in selection:
             data.append({
                "id": q.id,
                "name": q.question,
