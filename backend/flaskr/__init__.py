@@ -124,24 +124,23 @@ def create_app(test_config=None):
     DONE
     """
     
-    @app.route('/questions/create', methods=['POST'])
-    def create_question():
-        id = request.get('id')
-        question = request.get('question')
-        answer = request.get('answer')
-        difficulty = request.get('difficulty')
-        category = request.get('category')
+    @app.route('/questions/add', methods=['POST'])
+    def add_question():
+        body = request.get_json()
+        question = body.get('question')
+        answer = body.get('answer')
+        difficulty = body.get('difficulty')
+        category = body.get('category')
                                             
-        new_question = Question(id=id, question=question, answer=answer, difficulty=difficulty, category=category)
+        new_question = Question(question=question, answer=answer, difficulty=difficulty, category=category)
                                             
         db.session.add(new_question)
         db.session.commit()
+        return jsonify({
+            'result': 'added'
+        })
     
-    """
-    TEST: When you submit a question on the "Add" tab,
-    the form will clear and the question will appear at the end of the last page
-    of the questions list in the "List" tab.
-    """
+   
 
     """
     @TODO:
