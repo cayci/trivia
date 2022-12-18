@@ -3,6 +3,7 @@ from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import random
+from pprint import pprint
 
 from models import setup_db, Question, Category, db
 
@@ -84,7 +85,7 @@ def create_app(test_config=None):
             'questions': json_formatted_questions[start:end],
             'total_questions': len(questions),
             'categories': retrieve_category_dictionary(),
-            'current_category': "Science"
+            'current_category': "all"
         })
           
        
@@ -107,6 +108,11 @@ def create_app(test_config=None):
             abort(404)
         finally:
             db.session.close()
+            
+        return jsonify({
+            'question_id': question_id
+        })
+              
     
     """
     TEST: Click trash icon next to a question to removed the ?
@@ -176,9 +182,25 @@ def create_app(test_config=None):
     This endpoint should take category and previous question parameters
     and return a random questions within the given category,
     if provided, and that is not one of the previous questions.
+    """
+    @app.route('/quizzes', methods=['POST'])
+    def get_quiz():
+        body = request.get_json()
+        previous_questions=body.get('previous_questions',None)
+        quiz_category=body.get('quiz_category')
+        category_id=quiz_category['id']
+        if (category_id != 0):
+            questions = db.session.query(Question).filter(Question.category==category_id, Question.id.notin_(previous_questions)).order_by(Question.id).all()
+            question = random.choice(questions)
+        else:
+            questions = db.session.query(Question).filter(Question.id.notin_(previous_questions)).order_by(Question.id).all()
+            question = random.choice(questions)
+        return jsonify({
+            'question': question.format()
+        })
+        
 
-    def 
-    
+    """   
     TEST: In the "Play" tab, after a user selects "All" or a category,
     one question at a time is displayed, the user is allowed to answer
     and shown whether they were correct or not.
