@@ -199,19 +199,22 @@ def create_app(test_config=None):
     """
     @app.route('/quizzes', methods=['POST'])
     def get_quiz():
-        body = request.get_json()
-        previous_questions=body.get('previous_questions',None)
-        quiz_category=body.get('quiz_category')
-        category_id=quiz_category['id']
-        if (category_id != 0):
-            questions = db.session.query(Question).filter(Question.category==category_id, Question.id.notin_(previous_questions)).order_by(Question.id).all()
-            question = random.choice(questions)
-        else:
-            questions = db.session.query(Question).filter(Question.id.notin_(previous_questions)).order_by(Question.id).all()
-            question = random.choice(questions)
-        return jsonify({
-            'question': question.format()
-        })
+        try:
+            body = request.get_json()
+            previous_questions=body.get('previous_questions',None)
+            quiz_category=body.get('quiz_category')
+            category_id=quiz_category['id']
+            if (category_id != 0):
+                questions = db.session.query(Question).filter(Question.category==category_id, Question.id.notin_(previous_questions)).order_by(Question.id).all()
+                question = random.choice(questions)
+            else:
+                questions = db.session.query(Question).filter(Question.id.notin_(previous_questions)).order_by(Question.id).all()
+                question = random.choice(questions)
+            return jsonify({
+                'question': question.format()
+            })
+        except:
+            abort(500)
         
 
     """   
