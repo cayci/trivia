@@ -58,6 +58,20 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(data['total_questions'])
         self.assertEqual(len(data['questions']),3)
         self.assertEqual(data['current_category'],'Entertainment')
+    
+    """
+    TEST: Search by any phrase. The questions list will update to include
+    only question that include that string within their question.
+    Try using the word "title" to start.
+    """
+    
+    def test_search_question_by_string(self):
+        res = self.client().post('/questions', json={'searchTerm': 'title'})
+        data = json.loads(res.data)
+                                
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(data['totalQuestions'])
+    
     """
     def test_404_requesting_beyond_valid_page(self):
         res = self.client().get('/questions?page=100')

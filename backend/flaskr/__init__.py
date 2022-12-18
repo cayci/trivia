@@ -146,9 +146,27 @@ def create_app(test_config=None):
     """
     @TODO:
     Create a POST endpoint to get questions based on a search term.
-    It should return any questions for whom the search term
-    is a substring of the question.
-
+    DONE
+    """
+    @app.route('/questions',methods=['POST'])
+    def search_question_by_string():
+        body = request.get_json()
+        searchTerm=body.get('searchTerm')
+        
+        questions = Question.query.filter(Question.question.ilike("%" + searchTerm + "%")).order_by(Question.id).all()
+        
+        data = []
+        for question in questions:
+            data.append(question.format())
+        
+        return jsonify({
+            'questions': data,
+            'totalQuestions': len(questions),
+            'currentCategory': "All"
+        })
+    
+    
+    """
     TEST: Search by any phrase. The questions list will update to include
     only question that include that string within their question.
     Try using the word "title" to start.
@@ -208,8 +226,39 @@ def create_app(test_config=None):
 
     """
     @TODO:
-    Create error handlers for all expected errors
-    including 404 and 422.
+    Create error handlers (including 404 and 422).
     """
-
+    @app.errorhandler(400)
+    def bad_request_error(error):
+        return jsonify({
+            "success": "False",
+            "error": 400,
+            "message": "bad request"
+        })
+    
+    @app.errorhandler(404)
+    def not_found_error(error):
+        return jsonify({
+            "success": "False",
+            "error": 404,
+            "message": "resource not found"
+        })
+    
+    @app.errorhandler(422)
+    def unprocessable(error):
+        return jsonify({
+            "success": "False",
+            "error": 422,
+            "message": "unprocessable"
+        })
+    
+    
+    @app.errorhandler(500)
+    def server_error(error):
+        return jsonify({
+            "success": "False",
+            "error": 500,
+            "message": "internal server error"
+        })
+    
     return app
