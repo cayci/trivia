@@ -4,7 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import random
 
-from models import setup_db, Question, Category
+from models import setup_db, Question, Category, db
 
 QUESTIONS_PER_PAGE = 10
 
@@ -47,8 +47,8 @@ def create_app(test_config=None):
         return response
 
     """
-    DONE
     @TODO:Create an endpoint to handle GET requests for all categories.
+    DONE
     """
     
     @app.route('/categories', methods=['GET'])
@@ -62,11 +62,10 @@ def create_app(test_config=None):
         })
 
     """
-    @TODO:
-    Create an endpoint to handle GET requests for questions,
-    including pagination (every 10 questions).
-    This endpoint should return a list of questions,
-    number of total questions, current category, categories.
+    @TODO: Create an endpoint to handle GET requests for questions,
+    including pagination. Return a list of questions,
+    number of questions, current category, categories.
+    DONE
     """
     
     @app.route('/questions', methods=['GET'])
@@ -90,27 +89,29 @@ def create_app(test_config=None):
           
        
     """
-    TEST: At this point, when you start the application
-    you should see questions and categories generated,
-    ten questions per page and pagination at the bottom of the screen for three pages.
-    Clicking on the page numbers should update the questions.
+    DONE
+    TEST: When you start the app you should see questions and categories generated, ten questions per page, pagination at the bottom.  Clicking on page numbers should update the questions.
     """
 
     """
     @TODO: Create an endpoint to DELETE question using a question ID.
     DONE
     """
-                                            
-    def delete_a_question():
-        
-        selection = Question.query.order_by(Question.id).all()
-        current_questions=paginate_questions(request, selection)
+    @app.route('/questions/<question_id>', methods=['DELETE'])         
+    def delete_a_question(question_id):
+        try:
+            Question.query.filter_by(id=question_id).delete()
+            db.session.commit()
+        except:
+            db.session.rollback()
+            abort(404)
+        finally:
+            db.session.close()
             
         return jsonify({
-            'success': True,
-            'questions': current_questions,
-            'total_questions': l0 + QUESTIONS_PER_PAGE
+            'question_id': question_id
         })
+              
     
     """
     TEST: Click trash icon next to a question to removed the ?
