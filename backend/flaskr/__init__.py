@@ -38,8 +38,8 @@ def create_app(test_config=None):
     cors = CORS(app, resouces={r"/api/*": {"origins": "*"}})
 
     """
-    DONE
     @TODO: Use the after_request decorator to set Access-Control-Allow
+    DONE
     """
     @app.after_request
     def after_request(response):
@@ -90,8 +90,8 @@ def create_app(test_config=None):
           
        
     """
-    DONE
     TEST: When you start the app you should see questions and categories generated, ten questions per page, pagination at the bottom.  Clicking on page numbers should update the questions.
+    DONE
     """
 
     """
@@ -126,20 +126,24 @@ def create_app(test_config=None):
     
     @app.route('/questions/add', methods=['POST'])
     def add_question():
-        body = request.get_json()
-        question = body.get('question')
-        answer = body.get('answer')
-        difficulty = body.get('difficulty')
-        category = body.get('category')
+        try:
+            body = request.get_json()
+            question = body.get('question')
+            answer = body.get('answer')
+            difficulty = body.get('difficulty')
+            category = body.get('category')                         
+            new_question = Question(question=question, answer=answer, difficulty=difficulty, category=category)
                                             
-        new_question = Question(question=question, answer=answer, difficulty=difficulty, category=category)
-                                            
-        db.session.add(new_question)
-        db.session.commit()
-        return jsonify({
-            'result': 'added'
-        })
-    
+            db.session.add(new_question)
+            db.session.commit()
+            return jsonify({
+                'result': 'added'
+            })
+        except:
+            db.session.rollback()
+            abort(422)
+        finally:
+            db.session.close()
    
 
     """
@@ -163,13 +167,6 @@ def create_app(test_config=None):
             'totalQuestions': len(questions),
             'currentCategory': "All"
         })
-    
-    
-    """
-    TEST: Search by any phrase. The questions list will update to include
-    only question that include that string within their question.
-    Try using the word "title" to start.
-    """
 
     """
     @TODO:
@@ -233,7 +230,7 @@ def create_app(test_config=None):
             "success": "False",
             "error": 400,
             "message": "bad request"
-        })
+        }),400
     
     @app.errorhandler(404)
     def not_found_error(error):
@@ -241,7 +238,7 @@ def create_app(test_config=None):
             "success": "False",
             "error": 404,
             "message": "resource not found"
-        })
+        }),404
     
     @app.errorhandler(422)
     def unprocessable(error):
@@ -249,7 +246,7 @@ def create_app(test_config=None):
             "success": "False",
             "error": 422,
             "message": "unprocessable"
-        })
+        }),422
     
     
     @app.errorhandler(500)
@@ -258,6 +255,6 @@ def create_app(test_config=None):
             "success": "False",
             "error": 500,
             "message": "internal server error"
-        })
+        }),500
     
     return app

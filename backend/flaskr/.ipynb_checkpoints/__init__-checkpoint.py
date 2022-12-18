@@ -38,8 +38,8 @@ def create_app(test_config=None):
     cors = CORS(app, resouces={r"/api/*": {"origins": "*"}})
 
     """
-    DONE
     @TODO: Use the after_request decorator to set Access-Control-Allow
+    DONE
     """
     @app.after_request
     def after_request(response):
@@ -90,8 +90,8 @@ def create_app(test_config=None):
           
        
     """
-    DONE
     TEST: When you start the app you should see questions and categories generated, ten questions per page, pagination at the bottom.  Clicking on page numbers should update the questions.
+    DONE
     """
 
     """
@@ -124,35 +124,51 @@ def create_app(test_config=None):
     DONE
     """
     
-    @app.route('/questions/create', methods=['POST'])
-    def create_question():
-        id = request.get('id')
-        question = request.get('question')
-        answer = request.get('answer')
-        difficulty = request.get('difficulty')
-        category = request.get('category')
+    @app.route('/questions/add', methods=['POST'])
+    def add_question():
+        try:
+            body = request.get_json()
+            question = body.get('question')
+            answer = body.get('answer')
+            difficulty = body.get('difficulty')
+            category = body.get('category')
+            raise Exception("Date provided can't be in the past")                            
+            new_question = Question(question=question, answer=answer, difficulty=difficulty, category=category)
                                             
-        new_question = Question(id=id, question=question, answer=answer, difficulty=difficulty, category=category)
-                                            
-        db.session.add(new_question)
-        db.session.commit()
-    
-    """
-    TEST: When you submit a question on the "Add" tab,
-    the form will clear and the question will appear at the end of the last page
-    of the questions list in the "List" tab.
-    """
+            db.session.add(new_question)
+            db.session.commit()
+            return jsonify({
+                'result': 'added'
+            })
+        except:
+            print("********* line 144")
+            db.session.rollback()
+            abort(422)
+        finally:
+            db.session.close()
+   
 
     """
     @TODO:
     Create a POST endpoint to get questions based on a search term.
-    It should return any questions for whom the search term
-    is a substring of the question.
-
-    TEST: Search by any phrase. The questions list will update to include
-    only question that include that string within their question.
-    Try using the word "title" to start.
+    DONE
     """
+    @app.route('/questions',methods=['POST'])
+    def search_question_by_string():
+        body = request.get_json()
+        searchTerm=body.get('searchTerm')
+        
+        questions = Question.query.filter(Question.question.ilike("%" + searchTerm + "%")).order_by(Question.id).all()
+        
+        data = []
+        for question in questions:
+            data.append(question.format())
+        
+        return jsonify({
+            'questions': data,
+            'totalQuestions': len(questions),
+            'currentCategory': "All"
+        })
 
     """
     @TODO:
@@ -208,8 +224,39 @@ def create_app(test_config=None):
 
     """
     @TODO:
-    Create error handlers for all expected errors
-    including 404 and 422.
+    Create error handlers (including 404 and 422).
     """
-
+    @app.errorhandler(400)
+    def bad_request_error(error):
+        return jsonify({
+            "success": "False",
+            "error": 400,
+            "message": "bad request"
+        })
+    
+    @app.errorhandler(404)
+    def not_found_error(error):
+        return jsonify({
+            "success": "False",
+            "error": 404,
+            "message": "resource not found"
+        })
+    
+    @app.errorhandler(422)
+    def unprocessable(error):
+        return jsonify({
+            "success": "False",
+            "error": 422,
+            "message": "unprocessable"
+        })
+    
+    
+    @app.errorhandler(500)
+    def server_error(error):
+        return jsonify({
+            "success": "False",
+            "error": 500,
+            "message": "internal server error"
+        })
+    
     return app

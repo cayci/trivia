@@ -11,6 +11,7 @@ class TriviaTestCase(unittest.TestCase):
     """This class represents the trivia test case"""
 
     new_question = {'question':'What do you call a group of crows', 'answer':'A murder', 'difficulty': 1, 'category': 1}
+    bad_question = {'question':'What do you call a group of crows', 'answer':'A murder', 'difficulty': 1, 'category': 9}
     
     def setUp(self):
         """Define test variables and initialize app."""
@@ -63,8 +64,7 @@ class TriviaTestCase(unittest.TestCase):
     
     """
     TEST: Search by any phrase. The questions list will update to include
-    only question that include that string within their question.
-    Try using the word "title" to start.
+    only questions that include that string. Use "title" to start.
     """
     
     def test_search_question_by_string(self):
@@ -122,15 +122,17 @@ class TriviaTestCase(unittest.TestCase):
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
-    """
-    def test_405_if_question_creation_not_allowed(self):
-        res = self.client().post('/question/105', json=self.new_question)
+
+    
+    def test_422_if_question_creation_not_allowed(self):
+        res = self.client().post('/questions/add', json=self.bad_question)
         data = json.loads(res.data)
 
-        self.assertEqual(res.status_code, 405)
-        self.assertEqual(data['success'], False)
-        self.assertEqual(data['message'], 'method not allowed')
+        self.assertEqual(res.status_code, 422)
+        self.assertEqual(data['success'], 'False')
+        self.assertEqual(data['message'], 'unprocessable')
 
+    """
     def test_post_new_quiz(self):
         res = self.client().get('/questions')
         data = json.loads(res.data)
