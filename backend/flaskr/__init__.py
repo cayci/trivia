@@ -4,6 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import random
 from pprint import pprint
+import traceback
 
 from models import setup_db, Question, Category, db
 
@@ -77,16 +78,16 @@ def create_app(test_config=None):
         body=request.get_json()
         questions = Question.query.order_by(Question.id).all()
         
-        if len(questions) == 0:
+        if len(questions[start:end]) == 0:
             abort(404)
-        
-        json_formatted_questions = [question.format() for question in questions]
-        return jsonify({
-            'questions': json_formatted_questions[start:end],
-            'total_questions': len(questions),
-            'categories': retrieve_category_dictionary(),
-            'current_category': "all"
-        })
+        else:
+            json_formatted_questions = [question.format() for question in questions]
+            return jsonify({
+                'questions': json_formatted_questions[start:end],
+                'total_questions': len(questions),
+                'categories': retrieve_category_dictionary(),
+                'current_category': "all"
+            })
           
        
     """
@@ -101,17 +102,21 @@ def create_app(test_config=None):
     @app.route('/questions/<question_id>', methods=['DELETE'])         
     def delete_a_question(question_id):
         try:
-            Question.query.filter_by(id=question_id).delete()
-            db.session.commit()
+            if len(Question.query.filter_by(id=question_id).all()) == 1:
+                Question.query.filter_by(id=question_id).delete()
+                db.session.commit()
+                return jsonify({
+                    'question_id': question_id
+                })
+            else:
+                abort(404)
         except:
             db.session.rollback()
             abort(404)
         finally:
             db.session.close()
             
-        return jsonify({
-            'question_id': question_id
-        })
+        
               
     
     """
@@ -213,7 +218,8 @@ def create_app(test_config=None):
             return jsonify({
                 'question': question.format()
             })
-        except:
+        except Exception as err:
+            print(traceback.format_exc())
             abort(500)
         
 

@@ -4,6 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import random
 from pprint import pprint
+import traceback
 
 from models import setup_db, Question, Category, db
 
@@ -131,8 +132,7 @@ def create_app(test_config=None):
             question = body.get('question')
             answer = body.get('answer')
             difficulty = body.get('difficulty')
-            category = body.get('category')
-            raise Exception("Date provided can't be in the past")                            
+            category = body.get('category')                         
             new_question = Question(question=question, answer=answer, difficulty=difficulty, category=category)
                                             
             db.session.add(new_question)
@@ -141,7 +141,6 @@ def create_app(test_config=None):
                 'result': 'added'
             })
         except:
-            print("********* line 144")
             db.session.rollback()
             abort(422)
         finally:
@@ -201,19 +200,23 @@ def create_app(test_config=None):
     """
     @app.route('/quizzes', methods=['POST'])
     def get_quiz():
-        body = request.get_json()
-        previous_questions=body.get('previous_questions',None)
-        quiz_category=body.get('quiz_category')
-        category_id=quiz_category['id']
-        if (category_id != 0):
-            questions = db.session.query(Question).filter(Question.category==category_id, Question.id.notin_(previous_questions)).order_by(Question.id).all()
-            question = random.choice(questions)
-        else:
-            questions = db.session.query(Question).filter(Question.id.notin_(previous_questions)).order_by(Question.id).all()
-            question = random.choice(questions)
-        return jsonify({
-            'question': question.format()
-        })
+        try:
+            body = request.get_json()
+            previous_questions=body.get('previous_questions',None)
+            quiz_category=body.get('quiz_category')
+            category_id=quiz_category['id']
+            if (category_id != 0):
+                questions = db.session.query(Question).filter(Question.category==category_id, Question.id.notin_(previous_questions)).order_by(Question.id).all()
+                question = random.choice(questions)
+            else:
+                questions = db.session.query(Question).filter(Question.id.notin_(previous_questions)).order_by(Question.id).all()
+                question = random.choice(questions)
+            return jsonify({
+                'question': question.format()
+            })
+        except Exception as err:
+            print(traceback.format_exc())
+            abort(500)
         
 
     """   
@@ -232,7 +235,7 @@ def create_app(test_config=None):
             "success": "False",
             "error": 400,
             "message": "bad request"
-        })
+        }),400
     
     @app.errorhandler(404)
     def not_found_error(error):
@@ -240,7 +243,7 @@ def create_app(test_config=None):
             "success": "False",
             "error": 404,
             "message": "resource not found"
-        })
+        }),404
     
     @app.errorhandler(422)
     def unprocessable(error):
@@ -248,7 +251,7 @@ def create_app(test_config=None):
             "success": "False",
             "error": 422,
             "message": "unprocessable"
-        })
+        }),422
     
     
     @app.errorhandler(500)
@@ -257,6 +260,6 @@ def create_app(test_config=None):
             "success": "False",
             "error": 500,
             "message": "internal server error"
-        })
+        }),500
     
     return app

@@ -36,14 +36,16 @@ class TriviaTestCase(unittest.TestCase):
     TODO
     Write at least one test for each test for successful operation and for expected errors.
     """
-    
+    # test get categories
     
     def test_get_categories(self):
         res = self.client().get('/categories')
         data = json.loads(res.data)
 
         self.assertTrue(len(data['categories']))
-        
+    
+    # test pagination
+    
     def test_get_paginated_questions(self):
         res = self.client().get('/questions?page=1')
         data = json.loads(res.data)
@@ -52,6 +54,16 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(data['total_questions'])
         self.assertEqual(len(data['questions']), 10)
         self.assertTrue(len(data['categories']))
+        
+    def test_404_requesting_beyond_valid_page(self):
+        res = self.client().get('/questions?page=100')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(data['success'], 'False')
+        self.assertEqual(data['message'],'resource not found')
+        
+    # test questions per category
         
     def test_get_questions_per_category(self):
         res = self.client().get('/categories/5/questions')
@@ -62,10 +74,21 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(len(data['questions']),3)
         self.assertEqual(data['current_category'],'Entertainment')
     
+    def test_get_invalid_category(self):
+        res = self.client().get('/categories/9/questions')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(data['success'], 'False')
+        self.assertEqual(data['message'],'resource not found')
+        
+    
     """
     TEST: Search by any phrase. The questions list will update to include
     only questions that include that string. Use "title" to start.
     """
+    
+    # search questions by string
     
     def test_search_question_by_string(self):
         res = self.client().post('/questions', json={'searchTerm': 'title'})
@@ -74,44 +97,28 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertTrue(data['totalQuestions'])
     
-    """
-    def test_404_requesting_beyond_valid_page(self):
-        res = self.client().get('/questions?page=100')
+    def test_search_question_by_string(self):
+        res = self.client().post('/questions', json={'searchTerm': 'xomo'})
+        data = json.loads(res.data)
+                                
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['totalQuestions'],0)
+    
+    # delete questions by id
+    
+    def test_delete_question_by_id(self):
+        res = self.client().delete('/questions/5')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+
+    def test_404_if_question_does_not_exist_on_delete(self):
+        res = self.client().delete('/questions/1000')
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 404)
-        self.assertEqual(data['success'], False)
-        self.assertEqual(data['message'],'resource not found')
-    
-    def test_get_question_by_id(self):
-        res = self.client().get('/questions/5')
-        data = json.loads(res.data)
-
-        self.assertEqual(res.status_code, 200)
-        self.assertEqual(data['success'], True)
-        self.assertTrue(data['total_questions'])
-        self.assertTrue(len(data['questions']))
-
-    def test_delete_question_by_id(self):
-        res = self.client().delete('/question/1')
-        data = json.loads(res.data)
-        question=Question.query.filter(Question.id==1).one_or_none()
-
-        self.assertEqual(res.status_code, 200)
-        self.assertEqual(data['success'], True)
-        self.assertEqual(data['deleted'], 1)
-        self.assertTrue(data['total_questions'])
-        self.assertTrue(len(data['questions']))
-        self.assertEqual(data[question, None])
-
-    def test_422_if_question_does_not_exist_on_delete(self):
-        res = self.client().delete('/question/1000')
-        data = json.loads(res.data)
-
-        self.assertEqual(res.status_code, 422)
-        self.assertEqual(data['success'], False)
-        self.assertEqual(data['message'],'unprocessable')
-    """
+        
+        
     """
     TEST: When you submit a question on the "Add" tab,
     the form will clear and the question will appear at the end of the    last page of the questions list in the "List" tab.
@@ -131,7 +138,8 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 422)
         self.assertEqual(data['success'], 'False')
         self.assertEqual(data['message'], 'unprocessable')
-
+    
+    #
 
     def test_post_new_quiz(self):
         res = self.client().post('/quizzes', json={'previous_questions':[], 'quiz_category': {'id': 1}})
